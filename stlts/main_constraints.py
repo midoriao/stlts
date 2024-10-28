@@ -1,3 +1,13 @@
+"""
+The main file for the MILP constraints of the STLTS algorithm.
+
+One can add the MILP constraints that represent the STL semantics.
+The constraints are mainly divided into three parts: timeline constraints, predicate constraints, and STL constraints.
+These constraints correspond to the three functions `add_timeline_constraints`, `add_predicate_constraints`, and `add_full_stl_constraints`.
+
+The `make_milp_variables` function initializes the MILP variables over which the constraints are defined.
+"""
+
 from __future__ import annotations
 
 import dataclasses

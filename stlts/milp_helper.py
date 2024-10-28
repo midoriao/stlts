@@ -1,3 +1,7 @@
+"""
+Helper functions for formulating logical constraints in MILP.
+"""
+
 from __future__ import annotations
 
 import gurobipy as gp

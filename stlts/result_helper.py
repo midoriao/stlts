@@ -12,6 +12,9 @@ from .validator import Approx
 def get_robust_semantics_result(
     prob: StlMilpProblem, depth: int | None = None, stl_spec: StlFormula | None = None
 ) -> pd.DataFrame:
+    """
+    Get the robustness of each subformula in the STL specification.
+    """
     if stl_spec is None:
         stl_spec = prob.stl_spec
     trace = prob.get_trace_result(interpolation=True)
@@ -30,6 +33,9 @@ def get_robust_semantics_result(
 
 
 def validate_robust_semantics(prob: StlMilpProblem, depth=None) -> bool:
+    """
+    Validate the correctness of the computed robustness in the STL specification.
+    """
     trace = prob.get_trace_result(interpolation=True)
     stl_spec = prob.stl_spec
     gamma = prob.get_gamma_result()

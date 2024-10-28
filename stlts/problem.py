@@ -1,3 +1,9 @@
+"""
+A class to represent an STL synthesis problem to solve with MILP.
+
+In typical usage, it is initialized with `create_stl_milp_problem`.
+"""
+
 from __future__ import annotations
 
 import dataclasses

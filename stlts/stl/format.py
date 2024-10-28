@@ -1,6 +1,11 @@
+"""
+This module provides functions to convert STL formulas
+into different string representations.
+"""
+
 from __future__ import annotations
 
-from .stl import (
+from .nodes import (
     Alw,
     And,
     Atomic,

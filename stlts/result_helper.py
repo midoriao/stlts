@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from stlts.stl_base import StlFormula
+from stlts.stl.node_base import StlFormula
 
 from .problem import StlMilpProblem
 from .validator import Approx

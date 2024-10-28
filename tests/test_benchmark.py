@@ -1,10 +1,11 @@
 import gurobipy as gp
 import pytest
 
-from stlts import benchmarks
+from stlts.benchmarks import benchmarks
 from stlts.result_helper import validate_robust_semantics
 
-RESTRICTED_LICENSE = ((m := gp.Model()).Params.LicenseID == 0)
+RESTRICTED_LICENSE = (m := gp.Model()).Params.LicenseID == 0
+
 
 @pytest.fixture
 def milp():
@@ -31,7 +32,9 @@ def test_chasing_car(milp, spec):
     assert validate_robust_semantics(prob)
 
 
-@pytest.mark.skipif(RESTRICTED_LICENSE, reason='Free Gurobi license does not support large MILP')
+@pytest.mark.skipif(
+    RESTRICTED_LICENSE, reason='Free Gurobi license does not support large MILP'
+)
 @pytest.mark.parametrize('spec', ['nav1'])
 def test_robot_navigation(milp, spec):
     prob = benchmarks.get_robot_navigation(
@@ -48,7 +51,9 @@ def test_robot_navigation(milp, spec):
     assert validate_robust_semantics(prob)
 
 
-@pytest.mark.skipif(RESTRICTED_LICENSE, reason='Free Gurobi license does not support large MILP')
+@pytest.mark.skipif(
+    RESTRICTED_LICENSE, reason='Free Gurobi license does not support large MILP'
+)
 @pytest.mark.parametrize('spec', ['iso1'])
 def test_iso_rss(milp, spec):
     prob = benchmarks.get_iso_rss(

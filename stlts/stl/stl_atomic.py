@@ -3,9 +3,9 @@ from __future__ import annotations
 import gurobipy as gp
 import numpy as np
 
-from .linear_expression import LinearInequality
-from .stl_base import StlFormula
-from .trace import Trace
+from ..linear_expression import LinearInequality
+from ..trace import Trace
+from .node_base import StlFormula
 
 
 class Predicate:

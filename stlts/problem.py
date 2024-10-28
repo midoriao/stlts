@@ -8,7 +8,7 @@ import numpy as np
 from stlts import main_constraints
 from stlts.main_constraints import MilpVariables
 
-from .stl import StlFormula
+from .stl.nodes import StlFormula
 from .system_model import SystemModel
 from .trace import Trace
 

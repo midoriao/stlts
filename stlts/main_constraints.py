@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import gurobipy as gp
 import numpy as np
 
-from stlts import stl
 from stlts.milp_helper import add_and_aux_var, add_or_aux_var, at_least_one
-from stlts.stl_atomic import Predicate
+from stlts.stl import nodes
+from stlts.stl.stl_atomic import Predicate
 
 from .constants import EPSILON
 
@@ -21,11 +21,11 @@ if TYPE_CHECKING:
 class MilpVariables:
     N: int
     gamma: Vars
-    stl_sat: dict[stl.StlFormula, Vars]
+    stl_sat: dict[nodes.StlFormula, Vars]
     pred_sat: dict[Predicate, Vars]
     pred_strong_sat: dict[Predicate, Vars]
-    sat_durations: dict[stl.BoundedAlw, Vars]
-    unsat_durations: dict[stl.BoundedEv, Vars]
+    sat_durations: dict[nodes.BoundedAlw, Vars]
+    unsat_durations: dict[nodes.BoundedEv, Vars]
 
     def get_values(self) -> dict:
         def get_values_from_vars(vars: Vars) -> np.ndarray:
@@ -56,14 +56,14 @@ class MilpVariables:
 
 def make_milp_variables(
     milp: gp.Model,
-    spec: stl.StlFormula,
+    spec: nodes.StlFormula,
     N: int,
     gamma_0: float,
     gamma_N: float,
     gamma_unit_length: float = 0.01,
 ) -> MilpVariables:
     subformulas = spec.get_subformulas()
-    predicates = [phi.predicate for phi in subformulas if isinstance(phi, stl.Atomic)]
+    predicates = [phi.predicate for phi in subformulas if isinstance(phi, nodes.Atomic)]
 
     gamma = milp.addVars(N + 1, lb=gamma_0, ub=gamma_N, name='gamma')
 
@@ -93,7 +93,7 @@ def make_milp_variables(
             name=f'sat_dur_{phi.shortname}',
         )
         for phi in subformulas
-        if isinstance(phi, stl.BoundedAlw)
+        if isinstance(phi, nodes.BoundedAlw)
     }
     unsat_durations = {
         phi: milp.addVars(
@@ -103,11 +103,11 @@ def make_milp_variables(
             name=f'unsat_dur_{phi.shortname}',
         )
         for phi in subformulas
-        if isinstance(phi, stl.BoundedEv)
+        if isinstance(phi, nodes.BoundedEv)
     }
 
     for phi in subformulas:
-        if isinstance(phi, stl.BoundedAlw) or isinstance(phi, stl.BoundedEv):
+        if isinstance(phi, nodes.BoundedAlw) or isinstance(phi, nodes.BoundedEv):
             assert phi.interval[0] < phi.interval[1]
             assert 0 <= phi.interval[0]
             assert phi.interval[1] <= gamma_N - gamma_0 - EPSILON
@@ -211,7 +211,7 @@ def add_predicate_constraints(
 def add_full_stl_constraints(
     milp: gp.Model,
     v: MilpVariables,
-    root: stl.StlFormula,
+    root: nodes.StlFormula,
     require_satisfaction=True,
 ) -> None:
     root_subformulas = root.get_subformulas()
@@ -233,7 +233,7 @@ def add_full_stl_constraints(
 
 @functools.singledispatch
 def add_stl_constraints(
-    phi: stl.StlFormula,
+    phi: nodes.StlFormula,
     milp: gp.Model,
     v: MilpVariables,
 ) -> None:
@@ -241,23 +241,25 @@ def add_stl_constraints(
 
 
 @add_stl_constraints.register
-def _(phi: stl.Top, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Top, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     milp.addConstrs((phi_sat[i] == True for i in phi_sat), name=f'stl[top]')
 
 
 @add_stl_constraints.register
-def _(phi: stl.Bottom, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Bottom, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     milp.addConstrs((phi_sat[i] == False for i in phi_sat), name=f'stl[bottom]')
 
 
 @add_stl_constraints.register
-def _(phi: stl.And, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.And, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     children_sat = [v.stl_sat[child] for child in phi.children]
+
     def children_sat_and(i):
         return gp.and_(*[child[i] for child in children_sat])
+
     milp.addConstrs(
         (phi_sat[i] == children_sat_and(i) for i in phi_sat),
         name=f'stl[and]_{phi.shortname}',
@@ -265,11 +267,13 @@ def _(phi: stl.And, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.Or, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Or, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     children_sat = [v.stl_sat[child] for child in phi.children]
+
     def children_sat_or(i):
         return gp.or_(*[child[i] for child in children_sat])
+
     milp.addConstrs(
         (phi_sat[i] == children_sat_or(i) for i in phi_sat),
         name=f'stl[or]_{phi.shortname}',
@@ -277,7 +281,7 @@ def _(phi: stl.Or, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.Until, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Until, milp: gp.Model, v: MilpVariables):
     postfix = f'{phi.shortname}'
     N = v.N
     z1 = milp.addVars(list(range(1, N)), vtype=gp.GRB.BINARY, name=f'z1_{postfix}')
@@ -305,7 +309,7 @@ def _(phi: stl.Until, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.Release, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Release, milp: gp.Model, v: MilpVariables):
     postfix = f'{phi.shortname}'
     N = v.N
     z1 = milp.addVars(list(range(1, N)), vtype=gp.GRB.BINARY, name=f'z1_{postfix}')
@@ -334,7 +338,7 @@ def _(phi: stl.Release, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.Alw, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Alw, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     postfix = f'{phi.shortname}'
     N = v.N
@@ -349,7 +353,7 @@ def _(phi: stl.Alw, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.Ev, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Ev, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     postfix = f'{phi.shortname}'
     N = v.N
@@ -364,7 +368,7 @@ def _(phi: stl.Ev, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.Atomic, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.Atomic, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     pred_strong_sat = v.pred_strong_sat[phi.predicate]
     milp.addConstrs(
@@ -377,7 +381,7 @@ def _(phi: stl.Atomic, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.BoundedAlw, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.BoundedAlw, milp: gp.Model, v: MilpVariables):
     _bounded_alw_constraints(
         milp=milp,
         phi_sat=v.stl_sat[phi],
@@ -390,7 +394,7 @@ def _(phi: stl.BoundedAlw, milp: gp.Model, v: MilpVariables):
 
 
 @add_stl_constraints.register
-def _(phi: stl.BoundedEv, milp: gp.Model, v: MilpVariables):
+def _(phi: nodes.BoundedEv, milp: gp.Model, v: MilpVariables):
     phi_sat = v.stl_sat[phi]
     child_sat = v.stl_sat[phi.child]
 

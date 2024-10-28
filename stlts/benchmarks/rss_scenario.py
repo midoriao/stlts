@@ -2,8 +2,19 @@ from __future__ import annotations
 
 import typing
 
-from .linear_expression import LinearExpression as L
-from .stl import Alw, And, Atomic, Bottom, BoundedAlw, BoundedEv, Ev, Or, Top, Until
+from stlts.linear_expression import LinearExpression as L
+from stlts.stl import (
+    Alw,
+    And,
+    Atomic,
+    Bottom,
+    BoundedAlw,
+    BoundedEv,
+    Ev,
+    Or,
+    Top,
+    Until,
+)
 
 Real = typing.Any
 

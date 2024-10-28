@@ -1,18 +1,25 @@
+"""
+This module defines the base class for all STL nodes.
+"""
+
 from __future__ import annotations
 
 import numpy as np
 
-from .trace import Trace
+from ..trace import Trace
 
 
 class StlFormula:
     """STL formula."""
 
+    name: str
+    bounded: bool
+    interval: tuple[float, float] | None
+
     def __init__(self, name: str, children: list[StlFormula] | None = None):
         self.name = name
         self.bounded = False
         self.interval = None
-        self._timing = None
 
         if children is None:
             self.children = []
@@ -43,7 +50,7 @@ class StlFormula:
         if len(self.children) == 0:
             return [self]
         else:
-            subformulas = []
+            subformulas: list[StlFormula] = []
             for child in self.children:
                 candidates = child.get_subformulas(
                     depth=depth - 1 if depth is not None else None

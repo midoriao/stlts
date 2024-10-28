@@ -1,7 +1,14 @@
+"""
+This module provides the classes to represent linear expressions and inequalities.
+
+These classes are used in two ways:
+1. To define the atomic predicates in the STL formulas
+2. To describe the dynamics of the system
+"""
+
 from __future__ import annotations
 
 import dataclasses
-from calendar import c
 from typing import overload
 
 import gurobipy as gp
@@ -83,7 +90,7 @@ class LinearExpression:
 
     @property
     def norm(self) -> float:
-        return np.linalg.norm(self.coefficients)
+        return float(np.linalg.norm(self.coefficients))
 
     def __neg__(self) -> LinearExpression:
         return dataclasses.replace(

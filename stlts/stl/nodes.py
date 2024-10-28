@@ -3,9 +3,9 @@ from __future__ import annotations
 import gurobipy as gp
 import numpy as np
 
+from ..trace import Trace
+from .node_base import StlFormula
 from .stl_atomic import Atomic
-from .stl_base import StlFormula
-from .trace import Trace
 
 
 class Top(StlFormula):
@@ -52,7 +52,7 @@ class Or(StlFormula):
     def negation(self) -> StlFormula:
         return And(*[phi.negation() for phi in self.children])
 
-    def robust_semantics(self, trace: Trace, memo: None) -> np.ndarray:
+    def robust_semantics(self, trace: Trace, memo=None) -> np.ndarray:
         if memo is not None and self.name in memo:
             return memo[self.name]
         robs = [child.robust_semantics(trace, memo) for child in self.children]
@@ -220,6 +220,7 @@ class BoundedEv(StlFormula):
 def BoundedUntil(
     interval: tuple[float, float], phi1: StlFormula, phi2: StlFormula
 ) -> StlFormula:
+    until: StlFormula
     if interval[0] == 0:
         until = Until(phi1, phi2)
     else:
@@ -230,6 +231,7 @@ def BoundedUntil(
 def BoundedRelease(
     interval: tuple[float, float], phi1: StlFormula, phi2: StlFormula
 ) -> StlFormula:
+    release: StlFormula
     if interval[0] == 0:
         release = Release(phi1, phi2)
     else:
@@ -239,32 +241,3 @@ def BoundedRelease(
 
 def Implies(phi1: StlFormula, phi2: StlFormula) -> StlFormula:
     return Or(phi1.negation(), phi2)
-
-
-def atomic_predicates(phi: StlFormula) -> list[Atomic]:
-    """Return a list of atomic predicates in the formula."""
-    if isinstance(phi, Atomic):
-        return [phi]
-    elif isinstance(phi, BoundedEv) and isinstance(phi.phantom_child, Atomic):
-        return [phi.phantom_child]
-    else:
-        result = []
-        for child in phi.children:
-            candidates = atomic_predicates(child)
-            for new in candidates:
-                if new.name not in [p.name for p in result]:
-                    result.append(new)
-        return result
-
-
-def make_unique(root: StlFormula):
-    formula_visited = {}
-
-    for phi in root.get_subformulas():
-        if phi.name not in formula_visited:
-            formula_visited[phi.name] = phi
-        for i, child in enumerate(phi.children):
-            if child.name in formula_visited:
-                phi.children[i] = formula_visited[child.name]
-
-    return formula_visited[root.name]

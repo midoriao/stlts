@@ -328,14 +328,14 @@ def get_iso_rss(
     car.add_double_integrator_dynamics('by', 'by_vel', 'by_acc')
 
     # extra constraints to define rss distances
-    from stlts import rss_distance as rss
+    from . import rss_distance as rss
 
     rss.setRssDistance(milp, rssDistance_a, rssDistance_b, ax_vel, bx_vel)
     rss.setLateralRssDistance(
         milp, lateralRssDistance_a, lateralRssDistance_b, ay_vel, by_vel
     )
 
-    from stlts.rss_scenario import car_length, car_width, get_danger, get_scenario
+    from .rss_scenario import car_length, car_width, get_danger, get_scenario
 
     def no_collision(margin=0.0):
         overlap_x = And(

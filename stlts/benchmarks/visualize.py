@@ -6,7 +6,7 @@ from stlts.trace import Trace
 
 
 def plot_rss(trace_df: pd.DataFrame, interpolate: bool = False):
-    from stlts.rss_scenario import car_length, car_width
+    from .rss_scenario import car_length, car_width
 
     if interpolate:
         trace = Trace.from_df(trace_df).interpolate().df

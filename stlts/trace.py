@@ -6,6 +6,10 @@ import scipy
 
 
 class Trace:
+    """
+    A trace is a time series of states.
+    """
+
     state: dict[str, np.ndarray]
     time: np.ndarray
 

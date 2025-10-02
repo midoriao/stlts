@@ -4,6 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stlts"
+description = "Synthesizing a trace that satisfies a given Signal Temporal Logic (STL) formula."
+readme = "README.md"
 authors = [
     {name = "Sota Sato", email = "sotasato@nii.ac.jp"},
 ]
@@ -12,12 +14,16 @@ requires-python = ">=3.8"
 dynamic = ["version"]
 dependencies = [
     "numpy",
-    "gurobipy==11.0.0",
+    "gurobipy>=11.0.0",
     "scipy",
     "matplotlib",
     "pandas",
     "plotly==5.20.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/midoriao/stlts"
+Repository = "https://github.com/midoriao/stlts"
 
 [project.optional-dependencies]
 dev = [

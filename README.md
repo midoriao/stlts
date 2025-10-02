@@ -12,8 +12,17 @@ This is a Python package for synthesizing a trace that satisfies a given Signal 
 
 ### Install
 
-You can install this tool as a Python package with pip (version 22.0 or higher):
-`pip install -e .`
+```sh
+pip install stlts
+```
+
+Optionally, install from the cloned repo (requires pip version 22.0 or higher):
+
+```sh
+git clone https://github.com/midoriao/stlts
+cd stlts
+pip install -e .
+```
 
 ### Usage
 
